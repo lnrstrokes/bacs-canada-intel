@@ -1,0 +1,141 @@
+'use client';
+
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { AlertTriangle, ChevronDown, FileText, MapPin, Sparkles } from 'lucide-react';
+import { BACSPayload } from '@/lib/types';
+
+export default function PortalClient() {
+  const searchParams = useSearchParams();
+  const [payload, setPayload] = useState<BACSPayload | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const data = searchParams.get('data');
+    if (!data) {
+      setError('No encrypted profile data found in this link.');
+      return;
+    }
+    try {
+      const decoded = decodeURIComponent(atob(data));
+      setPayload(JSON.parse(decoded) as BACSPayload);
+    } catch {
+      setError('Security alert: invalid or corrupted profile token.');
+    }
+  }, [searchParams]);
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-8">
+        <div className="glass p-8 rounded-2xl text-rose-400 max-w-md text-center">
+          <AlertTriangle className="mx-auto mb-4" size={32} />
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!payload) return null;
+
+  const p = payload.profile;
+
+  return (
+    <div className="max-w-3xl w-full mx-auto space-y-8 py-12 px-4">
+      <header className="text-center space-y-4">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-xs font-medium text-emerald-400 tracking-wide uppercase">
+          <Sparkles size={14} /> BACS Intelligence Portal
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-bold text-white">
+          Welcome, {p?.name || 'Candidate'}
+        </h1>
+        <p className="text-slate-400 max-w-xl mx-auto">
+          Your personalized human capital feasibility analysis and 2026 IRCC pathway strategy.
+        </p>
+      </header>
+
+      <div className="glass p-6 rounded-2xl">
+        <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <FileText size={18} className="text-emerald-400" /> Profile Snapshot
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+          <div>
+            <p className="text-slate-500">Age</p>
+            <p className="text-white font-medium">{p?.age ?? '—'}</p>
+          </div>
+          <div>
+            <p className="text-slate-500">Education</p>
+            <p className="text-white font-medium">{p?.education ?? '—'}</p>
+          </div>
+          <div>
+            <p className="text-slate-500">Language</p>
+            <p className="text-white font-medium">{p?.languageScore ?? '—'}</p>
+          </div>
+          <div>
+            <p className="text-slate-500">Experience</p>
+            <p className="text-white font-medium">{p?.experienceYears ?? '—'} Years</p>
+          </div>
+          <div>
+            <p className="text-slate-500">Funds</p>
+            <p className="text-white font-medium">
+              ${(p?.fundsCAD ?? 0).toLocaleString()} CAD
+            </p>
+          </div>
+          <div>
+            <p className="text-slate-500">Target</p>
+            <p className="text-white font-medium truncate">{p?.targetOccupation ?? '—'}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+          <MapPin size={20} className="text-emerald-400" /> Your Strategic Roadmap
+        </h2>
+
+        <details
+          className="group glass p-5 rounded-xl border border-slate-800 open:border-emerald-500/50 transition-all"
+          open
+        >
+          <summary className="flex justify-between items-center font-semibold text-white cursor-pointer list-none">
+            <span>BACS Diagnostic & Strategy</span>
+            <ChevronDown
+              size={18}
+              className="transition-transform group-open:rotate-180 text-emerald-400"
+            />
+          </summary>
+          <div className="mt-4 text-slate-300 text-sm leading-relaxed whitespace-pre-line border-t border-slate-800 pt-4">
+            {payload.strategy_notes || 'Awaiting consultant strategy injection...'}
+          </div>
+        </details>
+
+        <details className="group glass p-5 rounded-xl border border-slate-800 open:border-emerald-500/50 transition-all">
+          <summary className="flex justify-between items-center font-semibold text-white cursor-pointer list-none">
+            <span>Document & Gap Checklist</span>
+            <ChevronDown
+              size={18}
+              className="transition-transform group-open:rotate-180 text-emerald-400"
+            />
+          </summary>
+          <div className="mt-4 text-slate-300 text-sm leading-relaxed border-t border-slate-800 pt-4">
+            <ul className="space-y-2 list-disc list-inside marker:text-emerald-500">
+              <li>Verify Educational Credential Assessment (ECA) status.</li>
+              <li>Ensure language test results are within 24 months of submission.</li>
+              <li>Map exact job duties to NOC 2021 TEER categories.</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+
+      <div className="glass p-8 rounded-2xl text-center space-y-4 border border-emerald-500/20 bg-emerald-500/5">
+        <h3 className="text-xl font-bold text-white">Ready to execute your roadmap?</h3>
+        <p className="text-slate-400 text-sm">
+          Forward this portal link to your designated immigration representative to initiate your
+          file.
+        </p>
+        <button className="px-8 py-3 bg-bacs-accent hover:bg-bacs-accentHover text-slate-950 font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20">
+          Contact Consultant
+        </button>
+      </div>
+    </div>
+  );
+}
