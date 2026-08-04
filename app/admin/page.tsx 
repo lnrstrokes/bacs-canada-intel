@@ -1,0 +1,120 @@
+'use client';
+
+import { useState } from 'react';
+import { CheckCircle2, Copy, Link2 } from 'lucide-react';
+import { BACSPayload } from '@/lib/types';
+
+export default function AdminGenerator() {
+  const [jsonInput, setJsonInput] = useState('');
+  const [strategyInput, setStrategyInput] = useState('');
+  const [generatedLink, setGeneratedLink] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  const handleGenerateLink = () => {
+    try {
+      const baseProfile = JSON.parse(jsonInput) as BACSPayload;
+
+      if (!baseProfile.profile) {
+        alert('This JSON is missing the "profile" object. Paste the full candidate payload.');
+        return;
+      }
+
+      const finalPayload: BACSPayload = {
+        ...baseProfile,
+        strategy_notes: strategyInput,
+      };
+
+      const encoded = btoa(encodeURIComponent(JSON.stringify(finalPayload)));
+      setGeneratedLink(`${window.location.origin}/portal?data=${encoded}`);
+      setCopied(false);
+    } catch {
+      alert('Invalid JSON format. Please check the candidate payload.');
+    }
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(generatedLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      alert('Auto-copy failed. Long-press the link text to copy it manually.');
+    }
+  };
+
+  return (
+    <div className="max-w-4xl w-full mx-auto space-y-8 py-12 px-4">
+      <header className="text-center space-y-2">
+        <h1 className="text-2xl font-bold text-white">BACS Admin: Portal Generator</h1>
+        <p className="text-slate-400 text-sm">
+          Inject NotebookLM intelligence into candidate payloads.
+        </p>
+      </header>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-3">
+          <label className="text-sm font-semibold text-emerald-400 uppercase tracking-wider">
+            1. Candidate JSON
+          </label>
+          <textarea
+            value={jsonInput}
+            onChange={(e) => setJsonInput(e.target.value)}
+            placeholder="Paste the downloaded bacs-profile.json here..."
+            className="w-full h-64 bg-slate-900 border border-slate-700 rounded-xl p-4 text-xs font-mono text-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none"
+          />
+        </div>
+
+        <div className="space-y-3">
+          <label className="text-sm font-semibold text-emerald-400 uppercase tracking-wider">
+            2. NotebookLM Strategy
+          </label>
+          <textarea
+            value={strategyInput}
+            onChange={(e) => setStrategyInput(e.target.value)}
+            placeholder="Paste the grounded IRCC strategy, gaps, and action plan here..."
+            className="w-full h-64 bg-slate-900 border border-slate-700 rounded-xl p-4 text-sm text-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none"
+          />
+        </div>
+      </div>
+
+      <button
+        onClick={handleGenerateLink}
+        className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 rounded-xl border border-slate-700 transition-all"
+      >
+        Compile & Encrypt Portal Link
+      </button>
+
+      {generatedLink && (
+        <div className="glass p-6 rounded-2xl space-y-4">
+          <div className="flex items-center gap-2 text-emerald-400">
+            <CheckCircle2 size={20} />
+            <span className="font-semibold">Encrypted Portal Link Generated</span>
+          </div>
+          <div className="flex items-center gap-2 bg-slate-950 p-3 rounded-lg border border-slate-800 overflow-x-auto">
+            <Link2 size={16} className="text-slate-500 flex-shrink-0" />
+            <code className="text-xs text-slate-400">{generatedLink}</code>
+          </div>
+          {generatedLink.length > 7500 && (
+            <p className="text-amber-400 text-xs">
+              Warning: this link is very long. Shorten the strategy notes for reliable sharing on messaging apps.
+            </p>
+          )}
+          <button
+            onClick={handleCopy}
+            className="w-full flex items-center justify-center gap-2 bg-bacs-accent hover:bg-bacs-accentHover text-slate-950 font-bold py-3 rounded-lg transition-all"
+          >
+            {copied ? (
+              <>
+                <CheckCircle2 size={18} /> Copied to Clipboard
+              </>
+            ) : (
+              <>
+                <Copy size={18} /> Copy Link for Candidate
+              </>
+            )}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
