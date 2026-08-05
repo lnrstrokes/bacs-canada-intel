@@ -10,24 +10,33 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock,
+  Copy,
   FileDown,
-  FileJson,
-  Gauge,
-  Globe2,
+  FileText,
   GraduationCap,
-  Languages,
+  Handshake,
+  Link2,
   Lock,
+  Mail,
   MapPin,
+  MessageCircle,
+  Send,
   ShieldCheck,
   Sparkles,
   TrendingUp,
   Unlock,
-  Wallet,
+  Zap,
 } from "lucide-react";
 import { BACSProfile, BACSPayload, Diagnostics, IELTSScores } from "@/lib/types";
 import { runDiagnostics } from "@/lib/engine";
 import { overallClb } from "@/lib/clb";
 import { inferNoc } from "@/lib/noc";
+import {
+  CONSULTANT_WHATSAPP_LINK,
+  CONSULTANT_WHATSAPP_DISPLAY,
+  REPORT_FEE_DISPLAY,
+  mailtoLink,
+} from "@/lib/config";
 
 const STEP_TITLES = [
   "Core human capital",
@@ -47,6 +56,7 @@ const STEP_EXPLAINERS = [
 
 const DEFAULT_PROFILE: BACSProfile = {
   name: "",
+  email: "",
   primaryGoal: "Express Entry (PR)",
   age: 30,
   familySize: 1,
@@ -127,42 +137,80 @@ const Toggle = ({
   </div>
 );
 
-const StatChip = ({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) => (
-  <div className="card card-hover flex items-center gap-3 px-4 py-3">
-    <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 ring-1 ring-emerald-500/25">
-      {icon}
-    </span>
-    <span className="leading-tight">
-      <span className="block text-sm font-semibold text-white">{value}</span>
-      <span className="block text-[11px] text-slate-500">{label}</span>
-    </span>
+const SampleScorecard = () => (
+  <div className="card mx-auto w-full max-w-md overflow-hidden text-left">
+    <div className="border-b border-slate-800 bg-slate-900/60 px-5 py-3">
+      <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">
+        Canada Readiness Scorecard
+      </p>
+    </div>
+    <div className="space-y-4 p-5">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-wider text-slate-500">Overall fit</p>
+          <p className="mt-0.5 text-lg font-bold text-amber-400">Moderate Fit</p>
+        </div>
+        <div
+          className="relative h-20 w-20 flex-shrink-0 rounded-full"
+          style={{ background: "conic-gradient(#f59e0b 266deg, rgba(51,65,85,0.5) 0deg)" }}
+        >
+          <div className="absolute inset-1.5 flex items-center justify-center rounded-full bg-slate-900">
+            <span className="text-xl font-bold text-amber-400">74</span>
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-xs">
+        <div className="rounded-lg border border-slate-800 bg-slate-800/30 px-3 py-2">
+          <p className="text-slate-500">CRS estimate</p>
+          <p className="mt-0.5 font-semibold text-white">≈ 344 pts</p>
+        </div>
+        <div className="rounded-lg border border-slate-800 bg-slate-800/30 px-3 py-2">
+          <p className="text-slate-500">Risk level</p>
+          <p className="mt-0.5 font-semibold text-amber-400">Moderate</p>
+        </div>
+      </div>
+      <div>
+        <p className="mb-2 text-xs font-semibold text-slate-400">🛣️ Top pathways</p>
+        {[
+          ["Federal Skilled Worker", 78],
+          ["PNP — Trades & Technical", 68],
+          ["Provincial demand streams", 62],
+        ].map(([name, fit]) => (
+          <div key={name as string} className="mb-2">
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-300">{name}</span>
+              <span className="font-mono text-emerald-400">{fit}%</span>
+            </div>
+            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-800">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400"
+                style={{ width: `${fit}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div>
+        <p className="mb-2 text-xs font-semibold text-slate-400">📍 Best province matches</p>
+        <p className="text-xs text-slate-300">Alberta · Saskatchewan · Nova Scotia</p>
+      </div>
+      <div>
+        <p className="mb-2 text-xs font-semibold text-slate-400">⚠️ Critical gaps to close</p>
+        <ul className="space-y-1 text-xs text-slate-400">
+          <li>● No Educational Credential Assessment (ECA)</li>
+          <li>● Language below competitive threshold (CLB 9)</li>
+          <li>● Settlement funds below 2026 IRCC threshold</li>
+        </ul>
+      </div>
+    </div>
   </div>
 );
 
-const FeatureCard = ({
-  icon,
-  title,
-  body,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  body: string;
-}) => (
-  <div className="card card-hover group p-5 text-left">
-    <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/25 transition-colors duration-300 group-hover:bg-emerald-500/20">
-      {icon}
-    </span>
-    <h3 className="mb-1.5 text-sm font-bold text-white">{title}</h3>
-    <p className="text-xs leading-relaxed text-slate-400">{body}</p>
-  </div>
+const CheckRow = ({ icon, label }: { icon: string; label: string }) => (
+  <li className="flex items-start gap-2.5 text-sm text-slate-300">
+    <span className="mt-0.5 flex-shrink-0">{icon}</span>
+    {label}
+  </li>
 );
 
 export default function IntakeEngine() {
@@ -171,6 +219,7 @@ export default function IntakeEngine() {
   const [profile, setProfile] = useState<BACSProfile>(DEFAULT_PROFILE);
   const [diag, setDiag] = useState<Diagnostics | null>(null);
   const [showPrecision, setShowPrecision] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const set = (patch: Partial<BACSProfile>) => setProfile({ ...profile, ...patch });
 
@@ -188,6 +237,10 @@ export default function IntakeEngine() {
   const handleContinue = () => {
     if (step === 0 && !profile.name.trim()) {
       alert("Please enter your name.");
+      return;
+    }
+    if (step === 0 && !profile.email.trim()) {
+      alert("Please enter your email so your report can be sent to you.");
       return;
     }
     if (step < 4) {
@@ -229,58 +282,272 @@ export default function IntakeEngine() {
 
   if (stage === "landing") {
     return (
-      <div className="mx-auto flex w-full max-w-3xl flex-col items-center space-y-10 py-12 text-center sm:py-16">
-        <header className="animate-fade-up space-y-5">
+      <div className="mx-auto w-full max-w-3xl">
+        {/* Scarcity strip */}
+        <div className="animate-fade-in -mx-4 mb-10 flex items-center justify-center gap-2 rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-2.5 text-center text-xs font-medium text-amber-300 sm:mx-0">
+          <Zap size={14} className="flex-shrink-0" />
+          Limited assessment slots this month — complete your free Canada snapshot today.
+        </div>
+
+        {/* Hero */}
+        <header className="animate-fade-up space-y-5 text-center">
           <div className="chip mx-auto border-emerald-500/25 bg-emerald-500/10 text-emerald-400">
-            <ShieldCheck size={14} /> 2026 BACS Protocol
+            <ShieldCheck size={14} /> 2026 Pathway Strategy Engine
           </div>
           <h1 className="mx-auto max-w-2xl text-balance text-3xl font-bold leading-tight tracking-tight text-white sm:text-5xl">
-            Your Canada PR readiness, <span className="text-gradient">scored in 4 minutes</span>
+            Find out your real chance of <span className="text-gradient">moving to Canada</span> in
+            4 minutes
           </h1>
           <p className="mx-auto max-w-xl leading-relaxed text-slate-400">
-            Answer a few questions. Get an honest readiness score, a component-based CRS estimate,
-            and your strongest pathways. Every stage is explained — you see exactly why your score
-            is what it is.
+            Get a personalized immigration readiness score, a CRS estimate, best-fit pathways and a
+            step-by-step gap list — based on your exact profile, scored against 2026 IRCC tables.
           </p>
-        </header>
-
-        <div className="animate-fade-up grid w-full grid-cols-2 gap-3 sm:grid-cols-4" style={{ animationDelay: "80ms" }}>
-          <StatChip icon={<Gauge size={16} className="text-emerald-400" />} label="Deterministic engine" value="100%" />
-          <StatChip icon={<Globe2 size={16} className="text-emerald-400" />} label="2026 IRCC tables" value="Live" />
-          <StatChip icon={<BadgeCheck size={16} className="text-emerald-400" />} label="NOC 2021 mapping" value="Auto" />
-          <StatChip icon={<FileJson size={16} className="text-emerald-400" />} label="Consultant payload" value="JSON" />
-        </div>
-
-        <div className="animate-fade-up grid w-full gap-3 sm:grid-cols-3" style={{ animationDelay: "160ms" }}>
-          <FeatureCard
-            icon={<Gauge size={18} className="text-emerald-400" />}
-            title="Human capital scoring"
-            body="Age, education, CLB language level and work history scored against 2026 federal tables — no guesswork, no black box."
-          />
-          <FeatureCard
-            icon={<Languages size={18} className="text-emerald-400" />}
-            title="CLB & NOC auto-mapping"
-            body="IELTS bands convert to your real CLB. Job titles map to NOC 2021 codes and TEER levels with a built-in duty check reminder."
-          />
-          <FeatureCard
-            icon={<Wallet size={18} className="text-emerald-400" />}
-            title="Actionable pathway plan"
-            body="Weaknesses ranked by severity with concrete fixes, plus your strongest provincial and federal pathway signals."
-          />
-        </div>
-
-        <div className="animate-fade-up w-full space-y-3" style={{ animationDelay: "240ms" }}>
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-slate-300">
+            <span className="flex items-center gap-1.5">
+              <CheckCircle2 size={15} className="text-emerald-400" /> Free — no sign-up required
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Clock size={15} className="text-emerald-400" /> 4-minute questionnaire
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Zap size={15} className="text-emerald-400" /> Instant results
+            </span>
+          </div>
           <button
             onClick={() => setStage("form")}
             className="btn-primary group w-full py-4 text-lg"
           >
-            Start assessment
+            Start my free assessment
             <ArrowRight size={20} className="transition-transform duration-200 group-hover:translate-x-1" />
           </button>
-          <p className="flex items-center justify-center gap-1.5 text-xs text-slate-500">
-            <Clock size={12} /> Takes ~4 minutes · No account required · Downloadable report
+        </header>
+
+        {/* Sample report */}
+        <section className="mt-16 space-y-5">
+          <div className="space-y-2 text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-emerald-400">
+              Sample report
+            </p>
+            <h2 className="text-xl font-bold text-white sm:text-2xl">
+              Your Canada Readiness Scorecard
+            </h2>
+            <p className="mx-auto max-w-md text-sm text-slate-400">
+              This is what you receive — instantly, after 4 minutes. No waiting, no guesswork.
+            </p>
+          </div>
+          <SampleScorecard />
+          <p className="text-center text-xs text-slate-500">
+            ↑ Your actual report will be personalized to your occupation, education and finances.
           </p>
-        </div>
+        </section>
+
+        {/* Insight hook */}
+        <section className="mt-16 space-y-4 text-center">
+          <h2 className="mx-auto max-w-xl text-balance text-2xl font-bold text-white">
+            Most applicants don&apos;t fail because they are unqualified.
+          </h2>
+          <p className="mx-auto max-w-lg text-sm leading-relaxed text-slate-400">
+            They fail because they apply through the wrong pathway, province, or job strategy. The
+            scorecard shows you exactly where you stand — and what to fix first.
+          </p>
+          <ul className="mx-auto grid max-w-lg gap-2.5 text-left">
+            <CheckRow icon="🛣️" label="Immigration pathway match" />
+            <CheckRow icon="🏢" label="Employer sponsorship potential" />
+            <CheckRow icon="📍" label="Province selection fit" />
+            <CheckRow icon="💼" label="Occupation demand in Canada" />
+            <CheckRow icon="📄" label="NOC/TEER code mapping" />
+            <CheckRow icon="📋" label="Missing document gaps" />
+          </ul>
+        </section>
+
+        {/* How it works */}
+        <section className="mt-16">
+          <h2 className="mb-6 text-center text-xl font-bold text-white sm:text-2xl">How it works</h2>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {[
+              {
+                emoji: "📝",
+                title: "Submit your profile",
+                body: "Answer 5 quick sections about your background, language, education, work and finances. Takes under 4 minutes.",
+              },
+              {
+                emoji: "⚡",
+                title: "System analyses your profile",
+                body: "Your occupation is mapped to a NOC 2021 code, IELTS bands become a CLB level, and your score is computed against 2026 criteria.",
+              },
+              {
+                emoji: "🎯",
+                title: "Receive your scorecard",
+                body: "Instant score, CRS estimate, matched pathways and a priority gap list — ready to save, share or forward to a consultant.",
+              },
+            ].map((s, i) => (
+              <div key={s.title} className="card card-hover relative p-5 text-left">
+                <span className="absolute right-4 top-4 font-mono text-3xl font-bold text-slate-800">
+                  {i + 1}
+                </span>
+                <span className="text-2xl">{s.emoji}</span>
+                <h3 className="mt-3 text-sm font-bold text-white">{s.title}</h3>
+                <p className="mt-1.5 text-xs leading-relaxed text-slate-400">{s.body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* What you actually get */}
+        <section className="mt-16">
+          <h2 className="mb-6 text-center text-xl font-bold text-white sm:text-2xl">
+            What you actually get
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {[
+              { icon: "🏆", title: "Readiness score & CRS estimate", body: "Your real chance, scored out of 100, with an indicative CRS component total." },
+              { icon: "🛣️", title: "Pathway ranking", body: "Your top 3 pathways ranked by fit score, with strategic reasoning." },
+              { icon: "📍", title: "Province matches", body: "Which provinces align with your occupation and declared interest." },
+              { icon: "📋", title: "Missing document checklist", body: "Exactly what you are missing — ECA, language test, funds history — in priority order." },
+              { icon: "📄", title: "NOC/TEER mapping", body: "Your occupation mapped to a NOC 2021 code with a duty-check reminder." },
+              { icon: "🗺️", title: "Complete assessed file", body: "A full expert assessment delivered via a consultant or agency partner (per case).", premium: true },
+            ].map((f) => (
+              <div key={f.title} className={`card card-hover p-5 text-left ${f.premium ? "border-emerald-500/30 bg-emerald-500/5" : ""}`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl">{f.icon}</span>
+                  {f.premium && (
+                    <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400 ring-1 ring-emerald-500/30">
+                      Premium
+                    </span>
+                  )}
+                </div>
+                <h3 className="mt-3 text-sm font-bold text-white">{f.title}</h3>
+                <p className="mt-1.5 text-xs leading-relaxed text-slate-400">{f.body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Who this is for */}
+        <section className="mt-16">
+          <h2 className="mb-6 text-center text-xl font-bold text-white sm:text-2xl">Who this is for</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {[
+              ["👷", "Skilled workers targeting Canada employment"],
+              ["🎓", "Recent graduates exploring study-to-PR routes"],
+              ["🔧", "Tradespeople in construction, welding, caregiving"],
+              ["💼", "Job seekers who want employer-sponsored pathways"],
+              ["👨‍👩‍👧", "Families planning full household relocation"],
+              ["🌍", "Anyone outside Canada wanting a reality check"],
+            ].map(([emoji, label]) => (
+              <div key={label} className="card card-hover flex items-center gap-2.5 p-4 text-left">
+                <span className="text-xl">{emoji}</span>
+                <span className="text-xs leading-snug text-slate-300">{label}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Before vs After */}
+        <section className="mt-16">
+          <h2 className="mb-6 text-center text-xl font-bold text-white sm:text-2xl">
+            Before vs. after your scorecard
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="card rounded-2xl border-rose-500/20 p-6">
+              <p className="mb-4 text-sm font-bold text-rose-400">❌ Before</p>
+              <ul className="space-y-2.5 text-sm text-slate-400">
+                <li>Confused about which provinces apply to you</li>
+                <li>No clear occupation-to-NOC mapping</li>
+                <li>Applying blindly to the wrong programs</li>
+                <li>No idea if your savings qualify</li>
+                <li>Random job search with no strategy</li>
+              </ul>
+            </div>
+            <div className="card rounded-2xl border-emerald-500/25 bg-emerald-500/5 p-6">
+              <p className="mb-4 text-sm font-bold text-emerald-400">✅ After</p>
+              <ul className="space-y-2.5 text-sm text-slate-300">
+                <li>Clear pathways ranked by your actual fit</li>
+                <li>Exact NOC code + TEER level confirmed</li>
+                <li>Targeted provinces with demand for your role</li>
+                <li>Funds gap calculated against IRCC thresholds</li>
+                <li>A prioritized gap list and next steps</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* Consultants & agencies */}
+        <section className="mt-16">
+          <div className="card overflow-hidden border-emerald-500/30 bg-emerald-500/5">
+            <div className="space-y-4 p-6 sm:p-8">
+              <div className="flex items-start gap-3">
+                <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 ring-1 ring-emerald-500/30">
+                  <Handshake size={20} className="text-emerald-400" />
+                </span>
+                <div>
+                  <h2 className="text-lg font-bold text-white sm:text-xl">
+                    For immigration consultants & agencies
+                  </h2>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-400">
+                    Send your candidate&apos;s profile and receive a complete, assessed candidate
+                    file — readiness score, CRS estimate, pathway fit and gap analysis, ready to
+                    present to your client.
+                  </p>
+                </div>
+              </div>
+              <ul className="space-y-2 text-sm text-slate-300">
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 size={16} className="mt-0.5 flex-shrink-0 text-emerald-400" /> Free
+                  candidate snapshot tool for your clients
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 size={16} className="mt-0.5 flex-shrink-0 text-emerald-400" />{" "}
+                  Complete assessed candidate file per case
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 size={16} className="mt-0.5 flex-shrink-0 text-emerald-400" />{" "}
+                  Optional interactive candidate website (add-on)
+                </li>
+              </ul>
+              <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-3">
+                <span className="text-sm text-slate-400">Per-case assessment</span>
+                <span className="text-lg font-bold text-white">
+                  {REPORT_FEE_DISPLAY} <span className="text-xs font-normal text-slate-500">per case</span>
+                </span>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <a
+                  href={CONSULTANT_WHATSAPP_LINK}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-primary py-3"
+                >
+                  <MessageCircle size={18} /> Submit a case on WhatsApp
+                </a>
+                <a
+                  href={mailtoLink({
+                    subject: "Partnership — candidate assessment",
+                    body: "Hello, I'm an immigration consultant/agency and I'd like to send candidate profiles for assessment.",
+                  })}
+                  className="btn-ghost py-3"
+                >
+                  <Mail size={18} /> Email us
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Final CTA */}
+        <section className="mt-16 space-y-4 text-center">
+          <h2 className="text-2xl font-bold text-white">Your score is waiting.</h2>
+          <p className="mx-auto max-w-md text-sm text-slate-400">
+            Instant results based on your profile — 4 minutes, no sign-up required.
+          </p>
+          <button
+            onClick={() => setStage("form")}
+            className="btn-primary group w-full py-4 text-lg"
+          >
+            Start my free assessment
+            <ArrowRight size={20} className="transition-transform duration-200 group-hover:translate-x-1" />
+          </button>
+        </section>
       </div>
     );
   }
@@ -304,6 +571,36 @@ export default function IntakeEngine() {
         : score >= 40
           ? "text-amber-400"
           : "text-rose-400";
+
+    const portalLink = `${window.location.origin}/portal?data=${btoa(
+      encodeURIComponent(JSON.stringify(buildPayload()))
+    )}`;
+
+    const shareBody = `Check out my Canada PR readiness scorecard (${diag.readinessScore}/100 — ${diag.classification}): ${portalLink}`;
+    const shareWhatsApp = `https://wa.me/?text=${encodeURIComponent(shareBody)}`;
+
+    const reportEmailBody = [
+      `Hi, please find my BACS 2026 PR feasibility assessment.`,
+      "",
+      `Name: ${profile.name}`,
+      `Email: ${profile.email}`,
+      `Readiness: ${diag.readinessScore}/100 (${diag.classification})`,
+      `CRS estimate: ${diag.crsBand}`,
+      `Top pathways: ${diag.pathways.map((p) => p.name).join("; ") || "To be determined"}`,
+      "",
+      "Full report (opens in your browser):",
+      portalLink,
+    ].join("\n");
+
+    const copyLink = async () => {
+      try {
+        await navigator.clipboard.writeText(portalLink);
+        setLinkCopied(true);
+        setTimeout(() => setLinkCopied(false), 2000);
+      } catch {
+        alert("Copy failed — long-press the link above to copy it manually.");
+      }
+    };
 
     return (
       <div className="mx-auto w-full max-w-2xl space-y-6 py-12">
@@ -402,12 +699,9 @@ export default function IntakeEngine() {
             </div>
             <p className="text-sm leading-relaxed text-slate-300">
               Verify 2026 regulatory thresholds (ECA validity, admissibility, JAL/EPA status, proof
-              of funds history) and generate your final Consultant Payload in 60 seconds.
+              of funds history) before sharing your file.
             </p>
-            <button
-              onClick={() => setShowPrecision(true)}
-              className="btn-primary w-full py-4"
-            >
+            <button onClick={() => setShowPrecision(true)} className="btn-primary w-full py-4">
               <Unlock size={18} /> Start 60-Second Precision Check
             </button>
           </section>
@@ -442,29 +736,81 @@ export default function IntakeEngine() {
               <Toggle label="Any visa refusals or criminal/medical issues?" value={profile.visaRefusals || profile.criminalMedical} onChange={(v) => set({ visaRefusals: v, criminalMedical: v })} danger />
               <Toggle label="Currently in Canada on a permit expiring in under 6 months?" value={profile.permitExpirySoon} onChange={(v) => set({ inCanada: v, permitExpirySoon: v })} />
             </div>
-            <button
-              onClick={() => setDiag(runDiagnostics(profile))}
-              className="btn-primary w-full py-4"
-            >
+            <button onClick={() => setDiag(runDiagnostics(profile))} className="btn-primary w-full py-4">
               <CheckCircle2 size={18} /> Generate Final 2026 Payload
             </button>
           </section>
         )}
 
-        {showPrecision && (
-          <section className="card animate-fade-up space-y-4 p-6" style={{ animationDelay: "300ms" }}>
-            <h2 className="flex items-center gap-2 font-semibold text-white">
-              <FileJson size={20} className="text-emerald-400" /> Your final report is ready
-            </h2>
-            <p className="text-sm leading-relaxed text-slate-400">
-              Download this file and send it to your immigration consultant. They will use it to
-              build your personalized relocation roadmap.
-            </p>
-            <button onClick={handleDownload} className="btn-primary w-full py-4">
-              <FileDown size={18} /> Download 2026 Assessment File
+        {/* Shareable report + premium teaser */}
+        <section className="card animate-fade-up space-y-4 p-6" style={{ animationDelay: "300ms" }}>
+          <h2 className="flex items-center gap-2 font-semibold text-white">
+            <FileText size={20} className="text-emerald-400" /> Your report is ready
+          </h2>
+          <p className="text-sm leading-relaxed text-slate-400">
+            Share your scorecard with a consultant or agent — or download the assessment data for
+            your file.
+          </p>
+          <div className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950 p-2 pl-3">
+            <Link2 size={16} className="flex-shrink-0 text-slate-500" />
+            <input
+              readOnly
+              value={portalLink}
+              onFocus={(e) => e.target.select()}
+              className="w-full bg-transparent font-mono text-xs text-slate-400 outline-none"
+            />
+            <button onClick={copyLink} className="btn-ghost flex-shrink-0 px-3 py-2 text-xs">
+              {linkCopied ? <CheckCircle2 size={15} className="text-emerald-400" /> : <Copy size={15} />}
+              <span className="hidden sm:inline">{linkCopied ? "Copied" : "Copy"}</span>
             </button>
-          </section>
-        )}
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <a
+              href={shareWhatsApp}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-ghost py-3"
+            >
+              <Send size={18} /> Send via WhatsApp
+            </a>
+            <a href={mailtoLink({ subject: `BACS 2026 Assessment — ${profile.name}`, body: reportEmailBody })} className="btn-primary py-3">
+              <Mail size={18} /> Email to a consultant
+            </a>
+          </div>
+          <div className="rounded-xl border border-slate-800 bg-slate-800/30 p-3">
+            <p className="text-xs text-slate-500">
+              <span className="font-semibold text-slate-400">For your consultant or agent:</span>{" "}
+              download the assessment data file (JSON) they can review or forward.
+            </p>
+            <button onClick={handleDownload} className="btn-ghost mt-3 w-full py-2.5 text-sm">
+              <FileDown size={16} /> Download assessment data (JSON)
+            </button>
+          </div>
+        </section>
+
+        {/* Premium teaser — manual, no checkout */}
+        <section className="card animate-fade-up space-y-4 border-emerald-500/30 bg-emerald-500/5 p-6" style={{ animationDelay: "360ms" }}>
+          <div className="flex items-center gap-3">
+            <Sparkles size={24} className="text-emerald-400" />
+            <h2 className="text-lg font-bold text-white">Want a complete, assessed candidate file?</h2>
+          </div>
+          <p className="text-sm leading-relaxed text-slate-300">
+            Forward your report to a consultant or immigration agency for a full per-case
+            assessment — or contact us directly. A personalized interactive website is also
+            available as an optional premium add-on.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <a href={CONSULTANT_WHATSAPP_LINK} target="_blank" rel="noopener noreferrer" className="btn-primary py-3">
+              <MessageCircle size={18} /> Message us on WhatsApp
+            </a>
+            <a href={mailtoLink({ subject: "Requesting a complete assessment", body: `Hello, I completed the free assessment and would like a complete, assessed candidate file.\n\nName: ${profile.name}\nEmail: ${profile.email}\nReport: ${portalLink}` })} className="btn-ghost py-3">
+              <Mail size={18} /> Email a request
+            </a>
+          </div>
+          <p className="text-center text-xs text-slate-500">
+            Reach us directly: {CONSULTANT_WHATSAPP_DISPLAY}
+          </p>
+        </section>
       </div>
     );
   }
@@ -512,6 +858,17 @@ export default function IntakeEngine() {
                 className="field-input"
                 placeholder="e.g. Priya Sharma"
                 autoFocus
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="field-label" htmlFor="email">Email (for your report)</label>
+              <input
+                id="email"
+                type="email"
+                value={profile.email}
+                onChange={(e) => set({ email: e.target.value })}
+                className="field-input"
+                placeholder="you@example.com"
               />
             </div>
             <div className="space-y-2">

@@ -7,6 +7,7 @@ export interface IELTSScores {
 
 export interface BACSProfile {
   name: string;
+  email: string;
   primaryGoal: string;
   age: number;
   familySize: number;

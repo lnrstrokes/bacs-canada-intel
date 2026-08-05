@@ -9,12 +9,15 @@ import {
   ChevronDown,
   FileText,
   Link2,
+  Mail,
   MapPin,
+  MessageCircle,
   Sparkles,
   TrendingUp,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { BACSPayload } from "@/lib/types";
+import { CONSULTANT_WHATSAPP_LINK, mailtoLink } from "@/lib/config";
 
 export default function PortalClient() {
   const searchParams = useSearchParams();
@@ -277,10 +280,29 @@ export default function PortalClient() {
               </>
             )}
           </button>
-          <span className="flex items-center gap-1.5 text-xs text-slate-500">
-            <BadgeCheck size={14} className="text-emerald-400" /> Shareable · Encoded · Candidate-ready
-          </span>
+          <a
+            href={mailtoLink({
+              subject: `BACS 2026 Assessment — ${p?.name || "Candidate"}`,
+              body: `Hi, please find my BACS 2026 assessment portal link:\n\n${
+                typeof window !== "undefined" ? window.location.href : ""
+              }\n\nFull report opens in your browser.`,
+            })}
+            className="btn-ghost px-6 py-3"
+          >
+            <Mail size={18} /> Send to Consultant
+          </a>
+          <a
+            href={CONSULTANT_WHATSAPP_LINK}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-ghost px-6 py-3"
+          >
+            <MessageCircle size={18} /> WhatsApp
+          </a>
         </div>
+        <p className="flex items-center justify-center gap-1.5 text-xs text-slate-500">
+          <BadgeCheck size={14} className="text-emerald-400" /> Shareable · Encoded · Candidate-ready
+        </p>
       </section>
     </div>
   );

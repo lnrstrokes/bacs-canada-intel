@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
+import { MessageCircle, ShieldCheck } from "lucide-react";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -27,25 +27,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <span className="block text-[11px] text-slate-500">Relocation Intelligence</span>
               </span>
             </Link>
-            <nav className="flex items-center gap-1 text-sm">
-              <Link
-                href="/"
-                className="rounded-lg px-3 py-1.5 text-slate-300 transition-colors duration-200 hover:bg-slate-800/60 hover:text-white"
+            <nav className="flex items-center gap-2 text-sm">
+              <a
+                href="https://wa.me/2347089711946"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-400 transition-colors duration-200 hover:bg-emerald-500/20"
               >
-                Assessment
-              </Link>
-              <Link
-                href="/portal"
-                className="hidden rounded-lg px-3 py-1.5 text-slate-300 transition-colors duration-200 hover:bg-slate-800/60 hover:text-white sm:block"
-              >
-                Candidate Portal
-              </Link>
-              <Link
-                href="/admin"
-                className="hidden rounded-lg px-3 py-1.5 text-slate-300 transition-colors duration-200 hover:bg-slate-800/60 hover:text-white sm:block"
-              >
-                Consultant
-              </Link>
+                <MessageCircle size={14} /> WhatsApp
+              </a>
             </nav>
           </div>
         </header>
