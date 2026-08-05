@@ -1,6 +1,7 @@
 export interface BACSProfile {
   // Phase 1: Diagnostic
   name: string;
+  primaryGoal: string;
   age: number;
   familySize: number;
   provinceInterest: string;
@@ -27,7 +28,7 @@ export interface BACSProfile {
   prioritySector: boolean;
   relativeInProvince: boolean;
   previousProvinceTies: boolean;
-  jalEpaApproved: string; // 'yes' | 'no' | 'na'
+  jalEpaApproved: string; 
   maritalStatus: string;
   spouseAccompanying: boolean;
   spousePoints: boolean;
@@ -52,7 +53,7 @@ export interface Obstacle {
 
 export interface Diagnostics {
   readinessScore: number;
-  classification: 'Ready' | 'Nearly Ready' | 'Needs Preparation' | 'Not Currently Eligible';
+  classification: 'Ready' | 'Nearly Ready' | 'Needs Preparation' | 'Action Required' | 'Not Currently Eligible';
   crsBand: string;
   pathways: PathwaySignal[];
   obstacles: Obstacle[];
