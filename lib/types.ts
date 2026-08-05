@@ -1,24 +1,32 @@
+export interface IELTSScores {
+  reading: number;
+  writing: number;
+  listening: number;
+  speaking: number;
+}
+
 export interface BACSProfile {
-  // Phase 1: Diagnostic
   name: string;
   primaryGoal: string;
   age: number;
   familySize: number;
   provinceInterest: string;
-  languageLevel: string;
+  hasLanguageTest: boolean;
+  ielts: IELTSScores;
+  clb: number;
   french: boolean;
   education: string;
   educationCountry: string;
   ecaStatus: string;
   occupation: string;
-  teerBand: string;
+  nocCode: string;
+  teerLevel: string;
   experienceYears: number;
+  continuousMonths: number;
   canadianExperience: boolean;
   fundsCAD: number;
   jobOffer: boolean;
   timeline: string;
-  
-  // Phase 2: Precision (The 28 Questions)
   ecaValid: boolean;
   canadianEducation: boolean;
   regulatedOccupation: boolean;
@@ -28,7 +36,7 @@ export interface BACSProfile {
   prioritySector: boolean;
   relativeInProvince: boolean;
   previousProvinceTies: boolean;
-  jalEpaApproved: string; 
+  jalEpaApproved: string;
   maritalStatus: string;
   spouseAccompanying: boolean;
   spousePoints: boolean;
@@ -51,12 +59,20 @@ export interface Obstacle {
   fix: string;
 }
 
+export interface ScoreComponent {
+  label: string;
+  points: number;
+  note: string;
+}
+
 export interface Diagnostics {
   readinessScore: number;
   classification: 'Ready' | 'Nearly Ready' | 'Needs Preparation' | 'Action Required' | 'Not Currently Eligible';
+  crsEstimate: number;
   crsBand: string;
   pathways: PathwaySignal[];
   obstacles: Obstacle[];
+  breakdown: ScoreComponent[];
   nextStep: string;
   strategyText: string;
 }
