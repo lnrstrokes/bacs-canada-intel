@@ -1,4 +1,5 @@
 export interface BACSProfile {
+  // Phase 1: Diagnostic
   name: string;
   age: number;
   familySize: number;
@@ -15,6 +16,26 @@ export interface BACSProfile {
   fundsCAD: number;
   jobOffer: boolean;
   timeline: string;
+  
+  // Phase 2: Precision (The 28 Questions)
+  ecaValid: boolean;
+  canadianEducation: boolean;
+  regulatedOccupation: boolean;
+  languageTestValid: boolean;
+  secondLanguage: boolean;
+  consecutive12Months: boolean;
+  prioritySector: boolean;
+  relativeInProvince: boolean;
+  previousProvinceTies: boolean;
+  jalEpaApproved: string; // 'yes' | 'no' | 'na'
+  maritalStatus: string;
+  spouseAccompanying: boolean;
+  spousePoints: boolean;
+  fundsHistory: boolean;
+  visaRefusals: boolean;
+  criminalMedical: boolean;
+  inCanada: boolean;
+  permitExpirySoon: boolean;
 }
 
 export interface PathwaySignal {
