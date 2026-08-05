@@ -1,18 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Clock, Download, ExternalLink, MapPin, ShieldCheck, Sparkles, Lock, Unlock } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Download, MapPin, ShieldCheck, Sparkles, Lock, Unlock, FileJson } from 'lucide-react';
 import { BACSProfile, BACSPayload, Diagnostics } from '@/lib/types';
 import { runDiagnostics } from '@/lib/engine';
 
 const STEP_TITLES = ['Personal snapshot', 'Language', 'Education', 'Work history', 'Funds & timeline'];
 
 const DEFAULT_PROFILE: BACSProfile = {
-  name: '', age: 30, familySize: 1, provinceInterest: 'No preference',
+  name: '', 
+  primaryGoal: 'Express Entry (PR)',
+  age: 30, familySize: 1, provinceInterest: 'No preference',
   languageLevel: 'none', french: false, education: 'Bachelors', educationCountry: 'outside',
   ecaStatus: 'not_done', occupation: '', teerBand: 'professional', experienceYears: 3,
   canadianExperience: false, fundsCAD: 25000, jobOffer: false, timeline: '6-12m',
-  // Precision defaults
   ecaValid: true, canadianEducation: false, regulatedOccupation: false,
   languageTestValid: true, secondLanguage: false, consecutive12Months: true,
   prioritySector: false, relativeInProvince: false, previousProvinceTies: false,
@@ -51,13 +52,13 @@ export default function IntakeEngine() {
   };
 
   const handlePrecisionComplete = () => {
-    setDiag(runDiagnostics(profile)); // Re-run with precision data
+    setDiag(runDiagnostics(profile));
   };
 
   const buildPayload = (): BACSPayload => {
     const d = diag as Diagnostics;
     return {
-      bacs_version: '2.1', generated_at: new Date().toISOString(), profile, diagnostics: d,
+      bacs_version: '2.2', generated_at: new Date().toISOString(), profile, diagnostics: d,
       crs_estimate: d.crsBand, primary_pathway: d.pathways[0]?.name ?? 'TBD', strategy_notes: d.strategyText,
     };
   };
@@ -69,11 +70,6 @@ export default function IntakeEngine() {
     a.href = url;
     a.download = `bacs-2026-${profile.name.trim().replace(/\s+/g, '-').toLowerCase()}.json`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-  };
-
-  const portalUrl = () => {
-    const encoded = btoa(encodeURIComponent(JSON.stringify(buildPayload())));
-    return `/portal?data=${encoded}`;
   };
 
   if (stage === 'landing') {
@@ -99,7 +95,8 @@ export default function IntakeEngine() {
   }
 
   if (stage === 'results' && diag) {
-    const scoreColor = diag.readinessScore >= 75 ? 'text-emerald-400' : diag.readinessScore >= 40 ? 'text-amber-400' : 'text-rose-400';
+    const isActionRequired = diag.classification === 'Action Required';
+    const scoreColor = isActionRequired ? 'text-amber-400' : diag.readinessScore >= 75 ? 'text-emerald-400' : diag.readinessScore >= 40 ? 'text-amber-400' : 'text-rose-400';
     
     return (
       <div className="max-w-2xl w-full mx-auto space-y-6 py-12">
@@ -109,14 +106,31 @@ export default function IntakeEngine() {
           </div>
         </header>
 
-        <div className="glass p-6 rounded-2xl flex items-center justify-between">
+        <div className={`glass p-6 rounded-2xl flex items-center justify-between ${isActionRequired ? 'border-amber-500/30 bg-amber-500/5' : ''}`}>
           <div>
-            <p className="text-slate-400 text-sm">Readiness</p>
-            <p className="text-white text-2xl font-bold">{diag.classification}</p>
-            <p className="text-slate-400 text-sm mt-2">CRS Band: <span className="text-white font-semibold">{diag.crsBand}</span></p>
+            <p className="text-slate-400 text-sm">Status</p>
+            <p className={`text-2xl font-bold ${isActionRequired ? 'text-amber-400' : 'text-white'}`}>
+              {isActionRequired ? 'Action Required' : diag.classification}
+            </p>
+            <p className="text-slate-400 text-sm mt-2">
+              CRS Estimate: <span className="text-white font-semibold">{diag.crsBand}</span>
+            </p>
           </div>
           <p className={`text-6xl font-bold ${scoreColor}`}>{diag.readinessScore}</p>
         </div>
+
+        {isActionRequired && (
+          <div className="glass p-6 rounded-2xl border border-amber-500/30 bg-amber-500/5 space-y-4">
+            <h2 className="text-amber-400 font-bold flex items-center gap-2">
+              <AlertTriangle size={20} /> Unlock Your Eligibility
+            </h2>
+            <p className="text-slate-300 text-sm leading-relaxed">
+              Your profile is currently missing mandatory documents for Express Entry. 
+              <strong className="text-white"> You cannot receive a CRS score until these are resolved.</strong> 
+              Complete the steps below to activate your profile.
+            </p>
+          </div>
+        )}
 
         <div className="glass p-6 rounded-2xl space-y-4">
           <h2 className="text-white font-semibold flex items-center gap-2"><MapPin size={18} className="text-emerald-400" /> Strongest pathways</h2>
@@ -180,23 +194,24 @@ export default function IntakeEngine() {
 
         {showPrecision && (
           <div className="glass p-6 rounded-2xl space-y-4">
-            <h2 className="text-white font-semibold">Your Final Report is Ready</h2>
+            <h2 className="text-white font-semibold flex items-center gap-2"><FileJson size={20} className="text-emerald-400" /> Your Final Report is Ready</h2>
             <p className="text-slate-400 text-sm leading-relaxed">
-              Your 2026 regulatory flags and precision data have been compiled. Forward this file to your consultant or open your personal portal.
+              Your 2026 regulatory flags and precision data have been compiled. 
+              <strong className="text-white"> Download this file and send it to your immigration consultant.</strong> 
+              They will use it to generate your personalized relocation roadmap.
             </p>
             <button onClick={handleDownload} className="w-full flex items-center justify-center gap-2 bg-bacs-accent hover:bg-bacs-accentHover text-slate-950 font-bold py-4 rounded-xl transition-all">
               <Download size={18} /> Download 2026 Assessment File
             </button>
-            <a href={portalUrl()} target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center gap-2 glass hover:bg-slate-800/60 text-white font-semibold py-4 rounded-xl transition-all">
-              <ExternalLink size={18} /> Open Relocation Portal
-            </a>
+            <p className="text-center text-xs text-slate-500 mt-2">
+              This file contains your encrypted profile data for consultant analysis.
+            </p>
           </div>
         )}
       </div>
     );
   }
 
-  // Form Steps 0-4 (Unchanged from previous version, but using the new profile state)
   return (
     <div className="max-w-2xl w-full mx-auto space-y-6 py-12">
       <div className="space-y-2">
@@ -213,6 +228,16 @@ export default function IntakeEngine() {
         {step === 0 && (
           <>
             <div className="space-y-2"><label className={labelClass}>Full name</label><input type="text" value={profile.name} onChange={(e) => set({ name: e.target.value })} className={inputClass} /></div>
+            
+            <div className="space-y-2"><label className={labelClass}>Primary Goal (Intent)</label>
+              <select value={profile.primaryGoal} onChange={(e) => set({ primaryGoal: e.target.value })} className={inputClass}>
+                <option value="Express Entry (PR)">Express Entry / Skilled Worker (PR)</option>
+                <option value="Study in Canada">Study in Canada (Student Visa)</option>
+                <option value="Work Permit">Work Permit / Job Offer</option>
+                <option value="Not Sure">Not Sure / Explore Options</option>
+              </select>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><label className={labelClass}>Age</label><input type="number" value={profile.age} onChange={(e) => set({ age: parseInt(e.target.value) || 0 })} className={inputClass} /></div>
               <div className="space-y-2"><label className={labelClass}>Family size</label><input type="number" value={profile.familySize} onChange={(e) => set({ familySize: parseInt(e.target.value) || 1 })} className={inputClass} /></div>
