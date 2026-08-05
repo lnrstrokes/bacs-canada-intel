@@ -87,6 +87,26 @@ export function runDiagnostics(p: BACSProfile): Diagnostics {
   if (p.provinceInterest && p.provinceInterest !== 'No preference') pathways.push({ name: `${p.provinceInterest} PNP alignment`, fit: 60, note: 'Declared intent strengthens PNP positioning.' });
 
   // ==========================================
+  // INTENT vs. ACADEMIC MERIT MISMATCH DETECTOR
+  // ==========================================
+  if (p.primaryGoal === 'Express Entry (PR)') {
+    const hasStrongMerit = (p.education === 'Bachelors' || p.education === 'Masters' || p.education === 'PhD') && p.languageLevel !== 'none';
+    if (!hasStrongMerit) {
+      obstacles.push({ 
+        severity: 'high', 
+        title: 'Strategy Mismatch: Express Entry vs. Academic Merit', 
+        fix: 'Your current education/language profile makes direct Express Entry highly competitive. We strongly recommend pivoting to a Study-to-PR route or targeting Provincial Semi-Skilled streams.' 
+      });
+    }
+  } else if (p.primaryGoal === 'Study in Canada' && p.experienceYears >= 5 && (p.education === 'Masters' || p.education === 'PhD')) {
+    obstacles.push({
+      severity: 'medium',
+      title: 'Overqualified for Standard Study Route',
+      fix: 'With your extensive experience and advanced degree, a standard student visa may face "bona fide" scrutiny. Consider an Executive MBA, direct LMIA job search, or Provincial Tech streams instead.'
+    });
+  }
+
+  // ==========================================
   // PHASE 2: PRECISION REGULATORY CHECKS
   // ==========================================
   if (p.visaRefusals || p.criminalMedical) {
@@ -114,45 +134,53 @@ export function runDiagnostics(p: BACSProfile): Diagnostics {
   obstacles.sort((a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity]);
 
   const readinessScore = Math.max(5, Math.min(95, score));
-  const classification: Diagnostics['classification'] =
-    readinessScore >= 75 ? 'Ready' : readinessScore >= 60 ? 'Nearly Ready' : readinessScore >= 40 ? 'Needs Preparation' : 'Not Currently Eligible';
+  
+  // --- THE HARD GATE LOGIC ---
+  const hasLanguage = p.languageLevel !== 'none';
+  const hasECA = p.educationCountry === 'inside' || p.ecaStatus === 'done';
+  const hasExperience = p.experienceYears >= 1;
+  
+  let classification: Diagnostics['classification'];
+  let crsBand: string;
 
-  // --- CRS Band Calculation ---
-  let crs = 300;
-  crs += p.age >= 20 && p.age <= 29 ? 100 : p.age <= 34 ? 85 : p.age <= 39 ? 60 : 40;
-  crs += p.education === 'PhD' ? 140 : p.education === 'Masters' ? 125 : p.education === 'Bachelors' ? 110 : p.education === 'Diploma' ? 90 : 40;
-  crs += p.languageLevel === 'clb9' ? 120 : p.languageLevel === 'clb7_8' ? 90 : p.languageLevel === 'below7' ? 50 : 10;
-  crs += p.experienceYears >= 3 ? 70 : p.experienceYears >= 1 ? 45 : 10;
-  if (p.canadianExperience) crs += 40;
-  if (p.french) crs += 25;
-  if (p.jobOffer) crs += 50;
-  const crsBand = `${Math.round((crs - 15) / 10) * 10}–${Math.round((crs + 15) / 10) * 10}`;
+  if (!hasLanguage || !hasECA || !hasExperience) {
+    classification = 'Action Required';
+    crsBand = 'Pending Mandatory Documents';
+    score = Math.min(score, 35); 
+  } else {
+    classification = readinessScore >= 75 ? 'Ready' : readinessScore >= 60 ? 'Nearly Ready' : readinessScore >= 40 ? 'Needs Preparation' : 'Not Currently Eligible';
+    
+    let crs = 300;
+    crs += p.age >= 20 && p.age <= 29 ? 100 : p.age <= 34 ? 85 : p.age <= 39 ? 60 : 40;
+    crs += p.education === 'PhD' ? 140 : p.education === 'Masters' ? 125 : p.education === 'Bachelors' ? 110 : p.education === 'Diploma' ? 90 : 40;
+    crs += p.languageLevel === 'clb9' ? 120 : p.languageLevel === 'clb7_8' ? 90 : p.languageLevel === 'below7' ? 50 : 10;
+    crs += p.experienceYears >= 3 ? 70 : p.experienceYears >= 1 ? 45 : 10;
+    if (p.canadianExperience) crs += 40;
+    if (p.french) crs += 25;
+    if (p.jobOffer) crs += 50;
+    crsBand = `${Math.round((crs - 15) / 10) * 10}–${Math.round((crs + 15) / 10) * 10}`;
+  }
 
   const nextStep = obstacles.length > 0 ? obstacles[0].fix : 'Book a strategy review with your consultant.';
 
-  // --- Strategy Text Generation (Formatted for Markdown Portal) ---
   const strategyText = [
-    `### READINESS: ${classification} (${readinessScore}/100)`,
-    `**Estimated CRS Band:** ${crsBand}`,
+    `### STATUS: ${classification}`,
+    `**Estimated CRS:** ${crsBand}`,
     `**Top Pathways:** ${topPathways.map((t) => t.name).join(' | ') || 'To be determined'}`,
     '',
-    `### PRIORITY ACTIONS`,
+    `### ACTION PLAN`,
     ...obstacles.slice(0, 3).map((o, i) => `${i + 1}. **${o.title}** — ${o.fix}`),
     ...(obstacles.length === 0 ? ['1. No critical gaps detected. Maintain document validity and monitor program draws.'] : []),
     '',
-    `### REGULATORY & PRECISION FLAGS`,
-    `- **ECA Status:** ${p.ecaStatus} (Valid <5yrs: ${p.ecaValid ? 'Yes' : 'No'})`,
-    `- **Language Test Valid <2yrs:** ${p.languageTestValid ? 'Yes' : 'No'}`,
-    `- **12 Consecutive Months Exp:** ${p.consecutive12Months ? 'Yes' : 'No'}`,
-    `- **Priority Sector 2026:** ${p.prioritySector ? 'Yes' : 'No'}`,
-    `- **Job Offer JAL/EPA:** ${p.jalEpaApproved === 'yes' ? 'Approved' : p.jalEpaApproved === 'no' ? 'Pending/Missing' : 'N/A'}`,
-    `- **6-Month Funds History:** ${p.fundsHistory ? 'Yes' : 'No'}`,
-    `- **Admissibility Risks:** ${p.visaRefusals || p.criminalMedical ? 'DECLARED' : 'None'}`,
-    `- **In Canada / Permit Expiry:** ${p.inCanada ? (p.permitExpirySoon ? 'Expiring <6mo' : 'Valid') : 'Outside'}`,
+    `### REGULATORY FLAGS`,
+    `- **ECA:** ${p.ecaStatus} (Valid: ${p.ecaValid ? 'Yes' : 'No'})`,
+    `- **Language:** ${p.languageTestValid ? 'Valid' : 'Expired/Missing'}`,
+    `- **Funds:** ${p.fundsCAD >= req ? 'Met' : 'Shortfall'}`,
+    `- **Admissibility:** ${p.visaRefusals || p.criminalMedical ? 'Review Needed' : 'Clear'}`,
     '',
     `### NEXT STEP`,
     nextStep,
   ].join('\n');
 
-  return { readinessScore, classification, crsBand, pathways: topPathways, obstacles, nextStep, strategyText };
+  return { readinessScore: Math.max(5, Math.min(95, score)), classification, crsBand, pathways: topPathways, obstacles, nextStep, strategyText };
 }
