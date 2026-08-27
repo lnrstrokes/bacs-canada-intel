@@ -140,18 +140,16 @@ export function runDiagnostics(p: BACSProfile): Diagnostics {
   if (/(truck|driver|weld|electric|construction|trades|mechanic|cook|chef)/.test(occ)) pathways.push({ name: 'Trades & food demand streams', fit: 70, note: 'Skilled trades and food services on provincial priority lists.' });
 
   // --- Real province matching (replaces the old placeholder that just
-  // echoed back whatever the user typed with a flat 60% fit) ---
+  // echoed back whatever the user typed with a flat 60% fit).
+  // Rendered in its own "Best province matches" UI section — not
+  // duplicated into `pathways`, which stays scoped to program TYPE
+  // signals (CEC, FSW, employer-driven) rather than geography.
   const provinceMatches = matchProvinces(p.nocCode, p.occupation);
   if (p.provinceInterest && p.provinceInterest !== 'No preference') {
     const declared = provinceMatches.find((m) => m.province.toLowerCase() === p.provinceInterest.toLowerCase());
-    if (declared) {
-      pathways.push({ name: `${declared.province} — ${declared.programName}`, fit: Math.min(95, declared.fit + 8), note: `${declared.note} Boosted for declared intent.` });
-    } else {
-      pathways.push({ name: `${p.provinceInterest} (unverified fit for your occupation)`, fit: 40, note: 'Your declared province isn\'t among the verified demand matches for your NOC — worth double-checking against the official PNP list before committing.' });
+    if (!declared && provinceMatches[0]?.province !== 'Not yet verified') {
+      obstacles.push({ severity: 'low', title: `${p.provinceInterest} isn't a verified demand match for your occupation`, fix: 'Check the official PNP occupation list for your declared province directly — your NOC doesn\'t appear on our verified demand table for it.' });
     }
-  }
-  for (const m of provinceMatches.slice(0, 2)) {
-    if (m.province !== 'Not yet verified') pathways.push({ name: `${m.province} — ${m.programName}`, fit: m.fit, note: m.note });
   }
 
   pathways.sort((a, b) => b.fit - a.fit);
