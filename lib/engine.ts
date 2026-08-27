@@ -1,4 +1,5 @@
 import { BACSProfile, Diagnostics, Obstacle, PathwaySignal, ScoreComponent } from './types';
+import { matchProvinces } from './provinces';
 
 const FUNDS_2026: Record<number, number> = {
   1: 14690, 2: 18288, 3: 22483, 4: 27297, 5: 30690, 6: 34917,
@@ -137,7 +138,21 @@ export function runDiagnostics(p: BACSProfile): Diagnostics {
   if (/(software|developer|data|engineer|tech|analyst)/.test(occ)) pathways.push({ name: 'BC PNP Tech / SINP Technology', fit: 70, note: 'Tech prioritized by BC and SK.' });
   if (/(nurse|care|health|medical|psw)/.test(occ)) pathways.push({ name: 'Healthcare demand streams', fit: 74, note: 'Care economy in continuous demand.' });
   if (/(truck|driver|weld|electric|construction|trades|mechanic|cook|chef)/.test(occ)) pathways.push({ name: 'Trades & food demand streams', fit: 70, note: 'Skilled trades and food services on provincial priority lists.' });
-  if (p.provinceInterest !== 'No preference') pathways.push({ name: `${p.provinceInterest} PNP alignment`, fit: 60, note: 'Declared intent strengthens PNP positioning.' });
+
+  // --- Real province matching (replaces the old placeholder that just
+  // echoed back whatever the user typed with a flat 60% fit) ---
+  const provinceMatches = matchProvinces(p.nocCode, p.occupation);
+  if (p.provinceInterest && p.provinceInterest !== 'No preference') {
+    const declared = provinceMatches.find((m) => m.province.toLowerCase() === p.provinceInterest.toLowerCase());
+    if (declared) {
+      pathways.push({ name: `${declared.province} — ${declared.programName}`, fit: Math.min(95, declared.fit + 8), note: `${declared.note} Boosted for declared intent.` });
+    } else {
+      pathways.push({ name: `${p.provinceInterest} (unverified fit for your occupation)`, fit: 40, note: 'Your declared province isn\'t among the verified demand matches for your NOC — worth double-checking against the official PNP list before committing.' });
+    }
+  }
+  for (const m of provinceMatches.slice(0, 2)) {
+    if (m.province !== 'Not yet verified') pathways.push({ name: `${m.province} — ${m.programName}`, fit: m.fit, note: m.note });
+  }
 
   pathways.sort((a, b) => b.fit - a.fit);
   const topPathways = pathways.slice(0, 3);
@@ -177,6 +192,7 @@ export function runDiagnostics(p: BACSProfile): Diagnostics {
     crsEstimate,
     crsBand,
     pathways: topPathways,
+    provinceMatches,
     obstacles,
     breakdown,
     nextStep,
