@@ -66,12 +66,21 @@ export interface ScoreComponent {
   note: string;
 }
 
+export interface ProvinceMatch {
+  province: string;
+  programName: string;
+  fit: number;
+  note: string;
+  asOf: string;
+}
+
 export interface Diagnostics {
   readinessScore: number;
   classification: 'Ready' | 'Nearly Ready' | 'Needs Preparation' | 'Action Required' | 'Not Currently Eligible';
   crsEstimate: number;
   crsBand: string;
   pathways: PathwaySignal[];
+  provinceMatches: ProvinceMatch[];
   obstacles: Obstacle[];
   breakdown: ScoreComponent[];
   nextStep: string;
