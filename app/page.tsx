@@ -192,7 +192,18 @@ const SampleScorecard = () => (
       </div>
       <div>
         <p className="mb-2 text-xs font-semibold text-slate-400">📍 Best province matches</p>
-        <p className="text-xs text-slate-300">Alberta · Saskatchewan · Nova Scotia</p>
+        {[
+          ["Nova Scotia", "NSHA/IWK Health Authority stream", 88],
+          ["Ontario", "OINP In-Demand Skills / Healthcare", 80],
+          ["British Columbia", "BC PNP Healthcare Professional", 78],
+        ].map(([name, program, fit]) => (
+          <div key={name as string} className="mb-1.5 flex items-center justify-between text-xs">
+            <span className="text-slate-300">
+              {name} <span className="text-slate-500">— {program}</span>
+            </span>
+            <span className="flex-shrink-0 font-mono text-emerald-400">{fit}%</span>
+          </div>
+        ))}
       </div>
       <div>
         <p className="mb-2 text-xs font-semibold text-slate-400">⚠️ Critical gaps to close</p>
@@ -690,6 +701,44 @@ export default function IntakeEngine() {
             </div>
           ))}
         </section>
+
+        {diag.provinceMatches && diag.provinceMatches.length > 0 && (
+          <section className="card animate-fade-up space-y-4 p-6" style={{ animationDelay: "210ms" }}>
+            <h2 className="flex items-center gap-2 font-semibold text-white">
+              <MapPin size={18} className="text-emerald-400" /> Best province matches
+            </h2>
+            {diag.provinceMatches[0]?.province === "Not yet verified" ? (
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+                <p className="text-sm text-amber-300">{diag.provinceMatches[0].note}</p>
+              </div>
+            ) : (
+              <>
+                {diag.provinceMatches.map((pm) => (
+                  <div key={`${pm.province}-${pm.programName}`} className="rounded-xl border border-slate-800 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-medium text-white">{pm.province}</p>
+                        <p className="text-xs text-slate-500">{pm.programName}</p>
+                      </div>
+                      <p className="flex-shrink-0 font-mono text-sm text-emerald-400">{pm.fit}%</p>
+                    </div>
+                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-800">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all duration-700"
+                        style={{ width: `${pm.fit}%` }}
+                      />
+                    </div>
+                    <p className="mt-2 text-xs text-slate-400">{pm.note}</p>
+                  </div>
+                ))}
+                <p className="text-xs text-slate-500">
+                  Signal as of {diag.provinceMatches[0]?.asOf} — PNP occupation lists change quarterly. Verify
+                  against the official provincial site before applying.
+                </p>
+              </>
+            )}
+          </section>
+        )}
 
         {!showPrecision ? (
           <section className="card animate-fade-up space-y-4 border-emerald-500/30 bg-emerald-500/5 p-6" style={{ animationDelay: "240ms" }}>
