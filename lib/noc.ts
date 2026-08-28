@@ -32,6 +32,13 @@ export const NOC_MAPPINGS: NocMapping[] = [
   { noc: '72300', teer: '2', title: 'Plumbers', keywords: ['plumber'] },
   { noc: '65310', teer: '5', title: 'Light duty cleaners', keywords: ['cleaner', 'janitor', 'housekeeper'] },
   { noc: '85101', teer: '5', title: 'General farm workers', keywords: ['farm worker', 'agricultural worker', 'farm labourer'] },
+  // Verified against Statistics Canada's NOC 2021 structure (Aug 2026) —
+  // added for occupations common in Nigerian/African applicant profiles.
+  { noc: '73112', teer: '3', title: 'Painters and decorators (except interior decorators)', keywords: ['painter', 'painting', 'decorator'] },
+  { noc: '64200', teer: '4', title: 'Tailors, dressmakers, furriers and milliners', keywords: ['tailor', 'dressmaker', 'seamstress', 'fashion designer'] },
+  { noc: '63210', teer: '3', title: 'Hairstylists and barbers', keywords: ['hairstylist', 'hairdresser', 'barber', 'salon'] },
+  { noc: '64410', teer: '4', title: 'Security guards and related security service occupations', keywords: ['security guard', 'security officer', 'guard'] },
+  { noc: '64100', teer: '4', title: 'Retail salespersons and visual merchandisers', keywords: ['retail salesperson', 'sales associate', 'shop attendant', 'store keeper'] },
 ];
 
 export function inferNoc(occupation: string): NocMapping | null {
@@ -41,4 +48,24 @@ export function inferNoc(occupation: string): NocMapping | null {
     if (m.keywords.some((k) => q.includes(k))) return m;
   }
   return null;
+}
+
+/**
+ * Live-typing autocomplete: returns up to `limit` NOC mappings whose
+ * title or any keyword starts with (or contains, for short queries)
+ * what the user has typed so far. Used to populate a suggestion list
+ * as the user types, rather than only inferring silently on submit.
+ */
+export function searchNoc(query: string, limit = 6): NocMapping[] {
+  const q = query.toLowerCase().trim();
+  if (q.length < 2) return [];
+  const starts: NocMapping[] = [];
+  const contains: NocMapping[] = [];
+  for (const m of NOC_MAPPINGS) {
+    const hitStart = m.title.toLowerCase().startsWith(q) || m.keywords.some((k) => k.startsWith(q));
+    const hitContain = m.title.toLowerCase().includes(q) || m.keywords.some((k) => k.includes(q));
+    if (hitStart) starts.push(m);
+    else if (hitContain) contains.push(m);
+  }
+  return [...starts, ...contains].slice(0, limit);
 }
