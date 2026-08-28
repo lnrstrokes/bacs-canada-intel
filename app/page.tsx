@@ -30,12 +30,12 @@ import {
 import { BACSProfile, BACSPayload, Diagnostics, IELTSScores } from "@/lib/types";
 import { runDiagnostics } from "@/lib/engine";
 import { overallClb } from "@/lib/clb";
-import { inferNoc } from "@/lib/noc";
+import { inferNoc, searchNoc } from "@/lib/noc";
 import {
-  CONSULTANT_WHATSAPP_LINK,
   CONSULTANT_WHATSAPP_DISPLAY,
   REPORT_FEE_DISPLAY,
   mailtoLink,
+  whatsappLink,
 } from "@/lib/config";
 
 const STEP_TITLES = [
@@ -231,6 +231,7 @@ export default function IntakeEngine() {
   const [diag, setDiag] = useState<Diagnostics | null>(null);
   const [showPrecision, setShowPrecision] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [occSuggestOpen, setOccSuggestOpen] = useState(false);
 
   const set = (patch: Partial<BACSProfile>) => setProfile({ ...profile, ...patch });
 
@@ -502,20 +503,30 @@ export default function IntakeEngine() {
                   </p>
                 </div>
               </div>
-              <ul className="space-y-2 text-sm text-slate-300">
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 size={16} className="mt-0.5 flex-shrink-0 text-emerald-400" /> Free
-                  candidate snapshot tool for your clients
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 size={16} className="mt-0.5 flex-shrink-0 text-emerald-400" />{" "}
-                  Complete assessed candidate file per case
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 size={16} className="mt-0.5 flex-shrink-0 text-emerald-400" />{" "}
-                  Optional interactive candidate website (add-on)
-                </li>
-              </ul>
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-emerald-400">
+                  As a partner, you get:
+                </p>
+                <ul className="space-y-2 text-sm text-slate-300">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 size={16} className="mt-0.5 flex-shrink-0 text-emerald-400" /> A
+                    free candidate snapshot link you can send your own clients directly
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 size={16} className="mt-0.5 flex-shrink-0 text-emerald-400" />{" "}
+                    A complete assessed file per case — readiness score, CRS estimate, pathway fit
+                    and a prioritized gap list, ready to present to your client
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 size={16} className="mt-0.5 flex-shrink-0 text-emerald-400" />{" "}
+                    A shareable portal link per candidate you can forward by email or WhatsApp
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 size={16} className="mt-0.5 flex-shrink-0 text-emerald-400" />{" "}
+                    An optional interactive candidate website you can offer as a paid add-on
+                  </li>
+                </ul>
+              </div>
               <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-3">
                 <span className="text-sm text-slate-400">Per-case assessment</span>
                 <span className="text-lg font-bold text-white">
@@ -524,7 +535,9 @@ export default function IntakeEngine() {
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <a
-                  href={CONSULTANT_WHATSAPP_LINK}
+                  href={whatsappLink({
+                    text: "Hello, I'm an immigration consultant/agency and I'd like to submit a candidate case for assessment.\n\nCandidate name:\nOccupation:\nPortal link (if the candidate already completed the free snapshot):\n\n(Please attach or describe the candidate's profile — age, occupation, education, language test scores, and province of interest — and I'll confirm the per-case fee and next steps.)",
+                  })}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-primary py-3"
@@ -534,7 +547,7 @@ export default function IntakeEngine() {
                 <a
                   href={mailtoLink({
                     subject: "Partnership — candidate assessment",
-                    body: "Hello, I'm an immigration consultant/agency and I'd like to send candidate profiles for assessment.",
+                    body: "Hello, I'm an immigration consultant/agency and I'd like to send candidate profiles for assessment.\n\nCandidate name:\nOccupation:\nPortal link (if the candidate already completed the free snapshot):\n",
                   })}
                   className="btn-ghost py-3"
                 >
@@ -849,7 +862,14 @@ export default function IntakeEngine() {
             available as an optional premium add-on.
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
-            <a href={CONSULTANT_WHATSAPP_LINK} target="_blank" rel="noopener noreferrer" className="btn-primary py-3">
+            <a
+              href={whatsappLink({
+                text: `Hello, I completed the free assessment and would like a complete, assessed candidate file.\n\nName: ${profile.name}\nReport: ${portalLink}`,
+              })}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary py-3"
+            >
               <MessageCircle size={18} /> Message us on WhatsApp
             </a>
             <a href={mailtoLink({ subject: "Requesting a complete assessment", body: `Hello, I completed the free assessment and would like a complete, assessed candidate file.\n\nName: ${profile.name}\nEmail: ${profile.email}\nReport: ${portalLink}` })} className="btn-ghost py-3">
@@ -982,19 +1002,19 @@ export default function IntakeEngine() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="field-label" htmlFor="ielts-r">IELTS Reading</label>
-                    <input id="ielts-r" type="number" step="0.5" min="0" max="9" value={profile.ielts.reading} onChange={(e) => updateIelts("reading", parseFloat(e.target.value) || 0)} className="field-input" />
+                    <input id="ielts-r" type="number" step="0.5" min="0" max="9" placeholder="e.g. 7.0" value={profile.ielts.reading || ""} onChange={(e) => updateIelts("reading", parseFloat(e.target.value) || 0)} className="field-input" />
                   </div>
                   <div className="space-y-2">
                     <label className="field-label" htmlFor="ielts-w">IELTS Writing</label>
-                    <input id="ielts-w" type="number" step="0.5" min="0" max="9" value={profile.ielts.writing} onChange={(e) => updateIelts("writing", parseFloat(e.target.value) || 0)} className="field-input" />
+                    <input id="ielts-w" type="number" step="0.5" min="0" max="9" placeholder="e.g. 7.0" value={profile.ielts.writing || ""} onChange={(e) => updateIelts("writing", parseFloat(e.target.value) || 0)} className="field-input" />
                   </div>
                   <div className="space-y-2">
                     <label className="field-label" htmlFor="ielts-l">IELTS Listening</label>
-                    <input id="ielts-l" type="number" step="0.5" min="0" max="9" value={profile.ielts.listening} onChange={(e) => updateIelts("listening", parseFloat(e.target.value) || 0)} className="field-input" />
+                    <input id="ielts-l" type="number" step="0.5" min="0" max="9" placeholder="e.g. 7.5" value={profile.ielts.listening || ""} onChange={(e) => updateIelts("listening", parseFloat(e.target.value) || 0)} className="field-input" />
                   </div>
                   <div className="space-y-2">
                     <label className="field-label" htmlFor="ielts-s">IELTS Speaking</label>
-                    <input id="ielts-s" type="number" step="0.5" min="0" max="9" value={profile.ielts.speaking} onChange={(e) => updateIelts("speaking", parseFloat(e.target.value) || 0)} className="field-input" />
+                    <input id="ielts-s" type="number" step="0.5" min="0" max="9" placeholder="e.g. 7.0" value={profile.ielts.speaking || ""} onChange={(e) => updateIelts("speaking", parseFloat(e.target.value) || 0)} className="field-input" />
                   </div>
                 </div>
                 <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
@@ -1053,16 +1073,42 @@ export default function IntakeEngine() {
 
         {step === 3 && (
           <>
-            <div className="space-y-2">
+            <div className="relative space-y-2">
               <label className="field-label" htmlFor="occupation">Skilled work experience (occupation / job title)</label>
               <input
                 id="occupation"
                 type="text"
-                placeholder="Start typing (e.g. Software developer, Cook, Truck driver)"
+                placeholder="Start typing (e.g. Painter, Tailor, Nurse, Security guard)"
                 value={profile.occupation}
-                onChange={(e) => updateOccupation(e.target.value)}
+                onChange={(e) => {
+                  updateOccupation(e.target.value);
+                  setOccSuggestOpen(true);
+                }}
+                onFocus={() => setOccSuggestOpen(true)}
+                onBlur={() => setTimeout(() => setOccSuggestOpen(false), 150)}
+                autoComplete="off"
                 className="field-input"
               />
+              {occSuggestOpen && profile.occupation.trim().length >= 2 && searchNoc(profile.occupation).length > 0 && (
+                <ul className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl border border-slate-700 bg-slate-900 shadow-xl">
+                  {searchNoc(profile.occupation).map((m) => (
+                    <li key={m.noc}>
+                      <button
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          set({ occupation: m.title, nocCode: m.noc, teerLevel: m.teer });
+                          setOccSuggestOpen(false);
+                        }}
+                        className="flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm text-slate-200 transition-colors hover:bg-emerald-500/10"
+                      >
+                        <span>{m.title}</span>
+                        <span className="flex-shrink-0 font-mono text-xs text-slate-500">NOC {m.noc}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -1098,11 +1144,11 @@ export default function IntakeEngine() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="field-label" htmlFor="months">Continuous experience, last 3 yrs (months)</label>
-                <input id="months" type="number" value={profile.continuousMonths} onChange={(e) => set({ continuousMonths: parseInt(e.target.value) || 0 })} className="field-input" />
+                <input id="months" type="number" placeholder="e.g. 12" value={profile.continuousMonths || ""} onChange={(e) => set({ continuousMonths: parseInt(e.target.value) || 0 })} className="field-input" />
               </div>
               <div className="space-y-2">
                 <label className="field-label" htmlFor="years">Total related experience (years)</label>
-                <input id="years" type="number" value={profile.experienceYears} onChange={(e) => set({ experienceYears: parseInt(e.target.value) || 0 })} className="field-input" />
+                <input id="years" type="number" placeholder="e.g. 3" value={profile.experienceYears || ""} onChange={(e) => set({ experienceYears: parseInt(e.target.value) || 0 })} className="field-input" />
               </div>
             </div>
             <div className="space-y-2">
