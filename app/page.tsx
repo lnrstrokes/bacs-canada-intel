@@ -30,6 +30,7 @@ import {
 import { BACSProfile, BACSPayload, Diagnostics, IELTSScores } from "@/lib/types";
 import { runDiagnostics } from "@/lib/engine";
 import { overallClb } from "@/lib/clb";
+import { ProvinceLivability } from "@/components/ProvinceLivability";
 import { inferNoc, searchNoc } from "@/lib/noc";
 import {
   CONSULTANT_WHATSAPP_DISPLAY,
@@ -742,6 +743,7 @@ export default function IntakeEngine() {
                       />
                     </div>
                     <p className="mt-2 text-xs text-slate-400">{pm.note}</p>
+                    <ProvinceLivability province={pm.province} />
                   </div>
                 ))}
                 <p className="text-xs text-slate-500">
