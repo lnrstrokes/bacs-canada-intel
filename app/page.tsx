@@ -59,8 +59,8 @@ const DEFAULT_PROFILE: BACSProfile = {
   name: "",
   email: "",
   primaryGoal: "Express Entry (PR)",
-  age: 30,
-  familySize: 1,
+  age: 0,
+  familySize: 0,
   provinceInterest: "No preference",
   hasLanguageTest: false,
   ielts: { reading: 0, writing: 0, listening: 0, speaking: 0 },
@@ -75,7 +75,7 @@ const DEFAULT_PROFILE: BACSProfile = {
   experienceYears: 0,
   continuousMonths: 0,
   canadianExperience: false,
-  fundsCAD: 25000,
+  fundsCAD: 0,
   jobOffer: false,
   timeline: "6-12m",
   ecaValid: true,
@@ -254,6 +254,14 @@ export default function IntakeEngine() {
     }
     if (step === 0 && !profile.email.trim()) {
       alert("Please enter your email so your report can be sent to you.");
+      return;
+    }
+    if (step === 0 && !profile.age) {
+      alert("Please enter your age.");
+      return;
+    }
+    if (step === 0 && !profile.familySize) {
+      alert("Please enter your family size (enter 1 if you're applying alone).");
       return;
     }
     if (step < 4) {
@@ -633,6 +641,15 @@ export default function IntakeEngine() {
           <div className="chip mx-auto border-emerald-500/25 bg-emerald-500/10 text-emerald-400">
             <Sparkles size={14} /> Diagnostic Complete
           </div>
+          <button
+            onClick={() => {
+              setStep(4);
+              setStage("form");
+            }}
+            className="mx-auto mt-3 flex items-center gap-1.5 text-xs text-slate-400 underline-offset-2 hover:text-emerald-400 hover:underline"
+          >
+            <ArrowLeft size={14} /> Edit my answers
+          </button>
         </header>
 
         <section className="card animate-fade-up flex items-center justify-between gap-4 p-6">
@@ -954,11 +971,11 @@ export default function IntakeEngine() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="field-label" htmlFor="age">Age</label>
-                <input id="age" type="number" value={profile.age} onChange={(e) => set({ age: parseInt(e.target.value) || 0 })} className="field-input" />
+                <input id="age" type="number" placeholder="e.g. 29" value={profile.age || ""} onChange={(e) => set({ age: parseInt(e.target.value) || 0 })} className="field-input" />
               </div>
               <div className="space-y-2">
                 <label className="field-label" htmlFor="family">Family size</label>
-                <input id="family" type="number" value={profile.familySize} onChange={(e) => set({ familySize: parseInt(e.target.value) || 1 })} className="field-input" />
+                <input id="family" type="number" placeholder="e.g. 1" value={profile.familySize || ""} onChange={(e) => set({ familySize: parseInt(e.target.value) || 0 })} className="field-input" />
               </div>
             </div>
             <div className="space-y-2">
@@ -1167,7 +1184,7 @@ export default function IntakeEngine() {
           <>
             <div className="space-y-2">
               <label className="field-label" htmlFor="funds">Liquid funds (CAD)</label>
-              <input id="funds" type="number" value={profile.fundsCAD} onChange={(e) => set({ fundsCAD: parseInt(e.target.value) || 0 })} className="field-input" />
+              <input id="funds" type="number" placeholder="e.g. 15000" value={profile.fundsCAD || ""} onChange={(e) => set({ fundsCAD: parseInt(e.target.value) || 0 })} className="field-input" />
             </div>
             <div className="space-y-2">
               <label className="field-label" htmlFor="offer">Canadian job offer?</label>
