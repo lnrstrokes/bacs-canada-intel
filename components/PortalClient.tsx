@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ProvinceLivability } from "@/components/ProvinceLivability";
 import {
   AlertTriangle,
   BadgeCheck,
@@ -216,6 +217,7 @@ export default function PortalClient() {
                     />
                   </div>
                   <p className="mt-2 text-xs text-slate-400">{pm.note}</p>
+                  <ProvinceLivability province={pm.province} />
                 </div>
               ))}
               <p className="text-xs text-slate-500">
