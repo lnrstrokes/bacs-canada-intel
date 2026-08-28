@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Building2, GraduationCap, Bus, Train, Pill } from "lucide-react";
+import { Building2, GraduationCap, Bus, TrainFront, Pill } from "lucide-react";
 
 interface LivabilityResponse {
   verified: boolean;
@@ -83,7 +83,7 @@ export function ProvinceLivability({ province }: { province: string }) {
           <Bus size={13} className="text-emerald-400" /> {counts.busStops} bus stops
         </span>
         <span className="inline-flex items-center gap-1">
-          <Train size={13} className="text-emerald-400" /> {counts.transitStations} transit stations
+          <TrainFront size={13} className="text-emerald-400" /> {counts.transitStations} transit stations
         </span>
       </div>
       <p className="mt-1.5 text-[11px] text-slate-600">
