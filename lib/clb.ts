@@ -1,9 +1,4 @@
-export interface IELTSScores {
-  reading: number;
-  writing: number;
-  listening: number;
-  speaking: number;
-}
+import { IELTSScores } from './types';
 
 export type IELTSSkill = keyof IELTSScores;
 
